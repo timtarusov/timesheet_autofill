@@ -21,7 +21,6 @@
 go.work
 *.xlsx
 *.DS_Store
-go.sum
 *.db
 *.json
 nvim-macos
