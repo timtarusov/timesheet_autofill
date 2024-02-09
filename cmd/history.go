@@ -21,8 +21,8 @@ var history = &cobra.Command{
 	Use:   "history",
 	Short: "Show history of invoices and timesheets",
 	Run: func(cmd *cobra.Command, args []string) {
-    db_path := viper.GetString("DB.Path")
-		db, err := gorm.Open(sqlite.Open(db_path), &gorm.Config{})
+		dbPath := viper.GetString("DB.Path")
+		db, err := gorm.Open(sqlite.Open(dbPath), &gorm.Config{})
 		if err != nil {
 			panic("failed to connect database")
 		}
@@ -38,17 +38,21 @@ var history = &cobra.Command{
 		var TS []*models.Timesheet
 		var IN []*models.Invoice
 
+		const orderAsc = "year asc"
+
+		const orderMonthAsc = "month asc"
+
 		if len(Months) == 0 {
-			db.Order("year asc").Order("month asc").Order("day asc").Find(&TS)
-			db.Order("year asc").Order("month asc").Find(&IN)
+			db.Order(orderAsc).Order(orderMonthAsc).Order("day asc").Find(&TS)
+			db.Order(orderAsc).Order(orderMonthAsc).Find(&IN)
 		} else {
 			var cond []string
 			for _, m := range Months {
 				cond = append(cond, strconv.Itoa(m))
 			}
 
-			db.Order("year asc").Order("month asc").Order("day asc").Find(&TS, "month IN ?", cond)
-			db.Order("year asc").Order("month asc").Find(&IN, "month IN ?", cond)
+			db.Order(orderAsc).Order(orderMonthAsc).Order("day asc").Find(&TS, "month IN ?", cond)
+			db.Order(orderAsc).Order(orderMonthAsc).Find(&IN, "month IN ?", cond)
 		}
 		fmt.Println("Timesheets for the chosen months:")
 		pkg.PrintTSHistory(TS)

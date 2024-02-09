@@ -7,26 +7,41 @@ import (
 	"time"
 
 	"github.com/spf13/viper"
-	"github.com/timtarusov/timesheet_autofill/models"
 	"github.com/xuri/excelize/v2"
 	"gorm.io/gorm"
+
+	"github.com/timtarusov/timesheet_autofill/models"
 )
 
 const (
-	IN_SHEET  = "Simple Invoice"
-	IN_DATE   = "E4"
-	IN_NUM    = "E5"
-	IN_DESC   = "A20"
-	IN_UNITS  = "C20"
-	IN_RATE   = "D20"
-	IN_AMOUNT = "E20"
-	IN_TOTAL  = "E37"
+	IN_SHEET             = "Simple Invoice"
+	IN_DATE              = "E4"
+	IN_NUM               = "E5"
+	IN_DESC              = "A20"
+	IN_UNITS             = "C20"
+	IN_RATE              = "D20"
+	IN_AMOUNT            = "E20"
+	IN_TOTAL             = "E37"
+	IN_DESC_INTERVIEWS   = "A21"
+	IN_UNITS_INTERVIEWS  = "C21"
+	IN_RATE_INTERVIEWS   = "D21"
+	IN_AMOUNT_INTERVIEWS = "E21"
+	TIME_FORMAT          = "Jan 2, 2006"
 )
 
-func Write_invoice(t int, year int, month int, path string, rate int, db *gorm.DB) int {
-	templ_invoice := viper.GetString("Template.InvoicePath")
-	inv_fn := viper.GetString("Template.InvoiceFilename")
-	inv, err := excelize.OpenFile(templ_invoice)
+func WriteInvoice(
+	t int,
+	year int,
+	month int,
+	path string,
+	rate int,
+	rateInt int,
+	nInt int,
+	db *gorm.DB,
+) int {
+	templInvoice := viper.GetString("Template.InvoicePath")
+	invFn := viper.GetString("Template.InvoiceFilename")
+	inv, err := excelize.OpenFile(templInvoice)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -46,19 +61,36 @@ func Write_invoice(t int, year int, month int, path string, rate int, db *gorm.D
 		log.Fatal(err)
 	}
 
-	total_usd := t * rate
+	totalUsd := t * rate
+	totalInterviews := nInt * rateInt
+	totalOverall := totalUsd + totalInterviews
 
-	desc_d_s := time.Date(year, time.Month(month), 1, 0, 0, 0, 0, time.Local)
-	desc_d_e := desc_d_s.AddDate(0, 1, -1)
-	desc := fmt.Sprintf("Consulting Servives - for the period of %s - %s", desc_d_s.Format("Jan 2, 2006"), desc_d_e.Format("Jan 2, 2006"))
+	descDS := time.Date(year, time.Month(month), 1, 0, 0, 0, 0, time.Local)
+	descDE := descDS.AddDate(0, 1, -1)
+	desc := fmt.Sprintf(
+		"Consulting Servives - for the period of %s - %s",
+		descDS.Format(TIME_FORMAT),
+		descDE.Format(TIME_FORMAT),
+	)
+	descInterview := fmt.Sprintf(
+		"Technical interviews - for the period of %s - %s",
+		descDS.Format(TIME_FORMAT),
+		descDE.Format(TIME_FORMAT),
+	)
 
 	inv.SetCellValue(IN_SHEET, IN_DATE, d)
 	inv.SetCellValue(IN_SHEET, IN_NUM, numInt+1)
 	inv.SetCellInt(IN_SHEET, IN_UNITS, t)
 	inv.SetCellValue(IN_SHEET, IN_DESC, desc)
 	inv.SetCellValue(IN_SHEET, IN_RATE, rate)
-	inv.SetCellValue(IN_SHEET, IN_AMOUNT, total_usd)
-	inv.SetCellValue(IN_SHEET, IN_TOTAL, total_usd)
+	if nInt > 0 {
+		inv.SetCellValue(IN_SHEET, IN_DESC_INTERVIEWS, descInterview)
+		inv.SetCellValue(IN_SHEET, IN_RATE_INTERVIEWS, rateInt)
+		inv.SetCellValue(IN_SHEET, IN_UNITS_INTERVIEWS, nInt)
+		inv.SetCellValue(IN_SHEET, IN_AMOUNT_INTERVIEWS, totalInterviews)
+	}
+	inv.SetCellValue(IN_SHEET, IN_AMOUNT, totalUsd)
+	inv.SetCellValue(IN_SHEET, IN_TOTAL, totalOverall)
 
 	db.Where("Month=?", month).Delete(&models.Invoice{})
 
@@ -67,14 +99,30 @@ func Write_invoice(t int, year int, month int, path string, rate int, db *gorm.D
 		Year:   year,
 		Rate:   float64(rate),
 		Hours:  float64(t),
-		Amount: float64(total_usd),
+		Amount: float64(totalUsd),
 	}
 	db.Create(&invoiceRecord)
 
-	fmt.Printf("Saving invoice to %s\n", path+"/"+inv_fn)
-	if err := inv.SaveAs(path + "/" + inv_fn); err != nil {
+	fmt.Printf("Saving invoice to %s\n", path+"/"+invFn)
+	if err := inv.SaveAs(path + "/" + invFn); err != nil {
 		log.Fatal(err)
 	}
-	return total_usd
-
+	fmt.Printf(
+		"In month %d, %d hours were billed at %d USD/hour, total amount is %d USD\n",
+		month,
+		t,
+		rate,
+		totalUsd,
+	)
+	if nInt > 0 {
+		fmt.Printf(
+			"In month %d, %d interviews were billed at %d USD/interview, total amount is %d USD\n",
+			month,
+			nInt,
+			rateInt,
+			totalInterviews,
+		)
+		fmt.Printf("Overall amount is %d USD\n", totalOverall)
+	}
+	return totalUsd
 }

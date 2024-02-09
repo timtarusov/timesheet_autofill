@@ -15,24 +15,24 @@ func PrintTSHistory(months []*models.Timesheet) {
 	header := table.Row{}
 	header = append(header, "YEAR")
 	header = append(header, "MONTH")
-	for i :=1; i<32; i++ {
+	for i := 1; i < 32; i++ {
 		header = append(header, strconv.Itoa(i))
 	}
 	header = append(header, "TOTAL")
 	t.AppendHeader(header)
 
-	var months_map =  make(map[int][]*models.Timesheet)
+	var monthsMap = make(map[int][]*models.Timesheet)
 	for _, m := range months {
-		months_map[m.Month] = append(months_map[m.Month], m)
+		monthsMap[m.Month] = append(monthsMap[m.Month], m)
 	}
-	for m, v := range months_map {
+	for m, v := range monthsMap {
 		row := table.Row{}
 		total := 0
 		row = append(row, 0)
 		row = append(row, m)
 		for _, d := range v {
 			row[0] = d.Year
-			if d.Value == 8{
+			if d.Value == 8 {
 				row = append(row, d.Value)
 				total += d.Value
 			} else {
@@ -40,7 +40,7 @@ func PrintTSHistory(months []*models.Timesheet) {
 			}
 		}
 		diff := 31 - len(v)
-		for i:=0; i<diff; i++ {
+		for i := 0; i < diff; i++ {
 			row = append(row, "")
 		}
 		row = append(row, total)

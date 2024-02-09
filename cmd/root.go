@@ -15,7 +15,9 @@ var (
 	rootCmd     = &cobra.Command{
 		Use:   "timesheet",
 		Short: "A small utility tool to autofill CAT timesheets",
-		Run:   func(cmd *cobra.Command, args []string) {},
+		Run: func(cmd *cobra.Command, args []string) {
+			//main command
+		},
 	}
 )
 

@@ -29,11 +29,11 @@ func dayInExclude(d int, ex []int) bool {
 	return false
 }
 
-func Write_timesheet(path string, year int, month int, exclude []int, db *gorm.DB) int {
-	ts_path := viper.GetString("Template.TimesheetPath")
-	ts_fn := viper.GetString("Template.TimesheetFilename")
+func WriteTimesheet(path string, year int, month int, exclude []int, db *gorm.DB) int {
+	tsPath := viper.GetString("Template.TimesheetPath")
+	tsFn := viper.GetString("Template.TimesheetFilename")
 	fmt.Println("Exclude", exclude)
-	ts_map := map[int]string{
+	tsMap := map[int]string{
 		1:  "B",
 		2:  "C",
 		3:  "D",
@@ -66,7 +66,7 @@ func Write_timesheet(path string, year int, month int, exclude []int, db *gorm.D
 		30: "AE",
 		31: "AF",
 	}
-	timesheet, err := excelize.OpenFile(ts_path)
+	timesheet, err := excelize.OpenFile(tsPath)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -76,12 +76,12 @@ func Write_timesheet(path string, year int, month int, exclude []int, db *gorm.D
 		}
 	}()
 
-	ts_ps := time.Date(year, time.Month(month), 1, 0, 0, 0, 0, time.Local)
-	ts_pe := ts_ps.AddDate(0, 1, -1)
-	ts_sd := ts_ps.AddDate(0, 1, 0)
-	timesheet.SetCellValue(SHEET_NAME, TS_PERIOD_START_DATE, ts_ps)
-	timesheet.SetCellValue(SHEET_NAME, TS_PERIOD_END_DATE, ts_pe)
-	timesheet.SetCellValue(SHEET_NAME, TS_CONSULTANT_SIGN_DATE, ts_sd)
+	tsPs := time.Date(year, time.Month(month), 1, 0, 0, 0, 0, time.Local)
+	tsPe := tsPs.AddDate(0, 1, -1)
+	tsSd := tsPs.AddDate(0, 1, 0)
+	timesheet.SetCellValue(SHEET_NAME, TS_PERIOD_START_DATE, tsPs)
+	timesheet.SetCellValue(SHEET_NAME, TS_PERIOD_END_DATE, tsPe)
+	timesheet.SetCellValue(SHEET_NAME, TS_CONSULTANT_SIGN_DATE, tsSd)
 
 	total := 0
 	var eights []int
@@ -91,10 +91,10 @@ func Write_timesheet(path string, year int, month int, exclude []int, db *gorm.D
 			continue
 		}
 		if (d.Weekday() != time.Saturday) && (d.Weekday() != time.Sunday) && (!dayInExclude(d.Day(), exclude)) {
-			cell := fmt.Sprintf("%s%d", ts_map[i], 15)
-			cell_t := fmt.Sprintf("%s%d", ts_map[i], 19)
+			cell := fmt.Sprintf("%s%d", tsMap[i], 15)
+			cellT := fmt.Sprintf("%s%d", tsMap[i], 19)
 			timesheet.SetCellInt(SHEET_NAME, cell, 8)
-			timesheet.SetCellInt(SHEET_NAME, cell_t, 8)
+			timesheet.SetCellInt(SHEET_NAME, cellT, 8)
 			total += 8
 			eights = append(eights, 8)
 		} else {
@@ -106,8 +106,8 @@ func Write_timesheet(path string, year int, month int, exclude []int, db *gorm.D
 	timesheet.SetCellInt(SHEET_NAME, TS_TOTAL_ALL, total)
 
 	PrintTSTable(eights, total)
-	fmt.Printf("Saving timesheet to %s\n", path+"/"+ts_fn)
-	if err := timesheet.SaveAs(path + "/" + ts_fn); err != nil {
+	fmt.Printf("Saving timesheet to %s\n", path+"/"+tsFn)
+	if err := timesheet.SaveAs(path + "/" + tsFn); err != nil {
 		log.Fatal(err)
 	}
 

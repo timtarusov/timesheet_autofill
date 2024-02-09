@@ -10,9 +10,9 @@ import (
 	"github.com/spf13/viper"
 )
 
-func Create_path(year int, month int) (string, error) {
-	def_path := viper.GetString("Template.Default")
-	mon_map := map[int]string{
+func CreatePath(year int, month int) (string, error) {
+	defPath := viper.GetString("Template.Default")
+	monMap := map[int]string{
 		1:  "JAN",
 		2:  "FEB",
 		3:  "MAR",
@@ -27,7 +27,7 @@ func Create_path(year int, month int) (string, error) {
 		12: "DEC",
 	}
 
-	path := def_path + "/" + mon_map[month] + strconv.Itoa(year)[2:]
+	path := defPath + "/" + monMap[month] + strconv.Itoa(year)[2:]
 	if _, err := os.Stat(path); errors.Is(err, os.ErrNotExist) {
 		err := os.MkdirAll(path, os.ModePerm)
 		if err != nil {

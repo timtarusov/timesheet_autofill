@@ -11,9 +11,9 @@ import (
 
 func CreateEmailBody(subject string, year int, month int, hours float64, rate float64, amount float64) string {
 
-	rec_name := viper.GetString("Email.Recipient.Name")
-	sender_name := viper.GetString("Email.Sender.Name")
-	sender_email := viper.GetString("Email.Sender.Email")
+	recipientName := viper.GetString("Email.Recipient.Name")
+	senderName := viper.GetString("Email.Sender.Name")
+	senderEmail := viper.GetString("Email.Sender.Email")
 	h := hermes.Hermes{
 		Product: hermes.Product{
 			Name:        "Timofey",
@@ -24,18 +24,18 @@ func CreateEmailBody(subject string, year int, month int, hours float64, rate fl
 		Theme: new(hermes.Flat),
 	}
 
-	month_s := time.Month(month).String()
+	monthString := time.Month(month).String()
 
 	email := hermes.Email{
 		Body: hermes.Body{
-			Name:   rec_name,
-			Intros: []string{fmt.Sprintf("Please find attached the timesheets and invoice for %s %d", month_s, year)},
+			Name:   recipientName,
+			Intros: []string{fmt.Sprintf("Please find attached the timesheets and invoice for %s %d", monthString, year)},
 			Table: hermes.Table{
 				Data: [][]hermes.Entry{
 					{
-						{Key: "Name", Value: sender_name},
+						{Key: "Name", Value: senderName},
 						{Key: "Year", Value: strconv.Itoa(year)},
-						{Key: "Month", Value: month_s},
+						{Key: "Month", Value: monthString},
 						{Key: "Hours", Value: fmt.Sprintf("%.0f", hours)},
 						{Key: "Rate", Value: fmt.Sprintf("$ %.2f", rate)},
 						{Key: "Amount", Value: fmt.Sprintf("$ %.2f", amount)},
@@ -57,7 +57,7 @@ func CreateEmailBody(subject string, year int, month int, hours float64, rate fl
 					Instructions: "Please confirm accepting this letter",
 					Button: hermes.Button{
 						Text: "Send letter of confirmation",
-						Link: fmt.Sprintf("mailto:%s?subject=%s&body=Confirmed", sender_email, subject),
+						Link: fmt.Sprintf("mailto:%s?subject=%s&body=Confirmed", senderEmail, subject),
 					},
 				},
 			},

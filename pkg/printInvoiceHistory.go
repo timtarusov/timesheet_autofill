@@ -16,24 +16,26 @@ func PrintInvoiceHistory(months []*models.Invoice) {
 		"Year", "Month", "Hours", "Rate", "Amount",
 	}
 	t.AppendHeader(header)
-	total_h := 0.0
-	total_usd := 0.0
-	avg_rate := 0.0
+	totalH := 0.0
+	totalUsd := 0.0
+	avgRate := 0.0
+	const rateFormat = "$ %.2f"
+
 	for _, m := range months {
 		row := table.Row{
 			m.Year,
 			m.Month,
 			m.Hours,
-			fmt.Sprintf("$ %.2f", m.Rate),
-			fmt.Sprintf("$ %.2f", m.Amount),
+			fmt.Sprintf(rateFormat, m.Rate),
+			fmt.Sprintf(rateFormat, m.Amount),
 		}
-		total_h += m.Hours
-		total_usd += m.Amount
-		avg_rate += m.Rate
+		totalH += m.Hours
+		totalUsd += m.Amount
+		avgRate += m.Rate
 		t.AppendRow(row)
 	}
-	avg_rate = avg_rate/float64(len(months))
-	footer := table.Row{"", "TOTAL/AVG", total_h, fmt.Sprintf("$ %.2f", avg_rate), fmt.Sprintf("$ %.2f", total_usd)}
+	avgRate = avgRate / float64(len(months))
+	footer := table.Row{"", "TOTAL/AVG", totalH, fmt.Sprintf(rateFormat, avgRate), fmt.Sprintf(rateFormat, totalUsd)}
 	t.AppendFooter(footer)
 	t.SetStyle(table.StyleColoredBlackOnGreenWhite)
 	t.Render()

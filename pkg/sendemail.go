@@ -6,9 +6,10 @@ import (
 	"time"
 
 	"github.com/spf13/viper"
-	"github.com/timtarusov/timesheet_autofill/models"
 	"gopkg.in/gomail.v2"
 	"gorm.io/gorm"
+
+	"github.com/timtarusov/timesheet_autofill/models"
 )
 
 func SendEmail(year int, month int, db *gorm.DB) {
@@ -26,6 +27,7 @@ func SendEmail(year int, month int, db *gorm.DB) {
 	m := gomail.NewMessage()
 	m.SetHeader("From", from)
 	m.SetHeader("To", to)
+	m.SetHeader("Cc", from)
 	month_s := time.Month(month).String()
 	mon_map := map[int]string{
 		1:  "JAN",
@@ -46,7 +48,7 @@ func SendEmail(year int, month int, db *gorm.DB) {
 	subject := fmt.Sprintf("Invoice for %s %d", month_s, year)
 	m.SetHeader("Subject", subject)
 
-	var inv = models.Invoice{}
+	inv := models.Invoice{}
 	db.Where("Year=?", year).Where("Month=?", month).First(&inv)
 
 	m.SetBody("text/html", CreateEmailBody(subject, year, month, inv.Hours, inv.Rate, inv.Amount))
